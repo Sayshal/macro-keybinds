@@ -1,0 +1,23 @@
+.macro-keybinds-config table {
+  width: 100%;
+  margin: 1em 0;
+}
+
+.macro-keybinds-config th,
+.macro-keybinds-config td {
+  padding: 0.5em;
+  text-align: left;
+}
+
+.macro-keybinds-config input[type='text'] {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid #7a7971;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.macro-keybinds-config input[disabled] {
+  background: rgba(0, 0, 0, 0.1);
+  color: #666;
+}

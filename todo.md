@@ -1,0 +1,3 @@
+- Create dropdown/button in macro window to set keybind.
+- Optional setting to disabled macrobars' 1-10 numkey keybinds.
+- Create setting to manage all existing macros per-user.

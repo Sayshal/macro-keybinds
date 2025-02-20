@@ -1,0 +1,28 @@
+<div class="macro-keybinds-config">
+  <table>
+    <thead>
+      <tr>
+        <th>Macro</th>
+        <th>Keybind</th>
+        <th>Owner</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each macros}}
+      {{#if (or ../showAll keybind)}}
+      <tr>
+        <td>{{name}}</td>
+        <td>
+          <input type="text" name="{{id}}" value="{{keybind}}" {{#if (and keybind (not owner))}}disabled{{/if}} />
+        </td>
+        <td>
+          {{#if keybind}}
+          {{#if owner}}You{{else}}{{ownerName}}{{/if}}
+          {{/if}}
+        </td>
+      </tr>
+      {{/if}}
+      {{/each}}
+    </tbody>
+  </table>
+</div>
