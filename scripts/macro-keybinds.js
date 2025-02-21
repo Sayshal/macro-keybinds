@@ -1,3 +1,4 @@
+/** Initialize Module with Foundry */
 Hooks.on('init', () => {
   console.log('macro-keybinds | Initializing module');
 
@@ -61,6 +62,7 @@ Hooks.on('init', () => {
   });
 });
 
+/** Disable default macros in ready hook */
 Hooks.on('ready', () => {
   const disableDefaultHotbar = game.settings.get('macro-keybinds', 'disableDefaultHotbar');
   console.log(`macro-keybinds | Checking disableDefaultHotbar: ${disableDefaultHotbar}`);
@@ -79,6 +81,7 @@ Hooks.on('ready', () => {
   }
 });
 
+/** Insert our html changes */
 Hooks.on('renderMacroConfig', (app, html, data) => {
   const macro = app.object;
   const keybinds = game.settings.get('macro-keybinds', 'userKeybinds');
@@ -188,6 +191,7 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
   });
 });
 
+/** Pass registration into foundryvtt */
 Hooks.on('updateMacro', async (macro, changes, options, userId) => {
   if (userId !== game.user.id) return;
 
