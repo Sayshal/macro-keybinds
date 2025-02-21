@@ -1,15 +1,12 @@
 # Macro Keybinds
 
-![GitHub issues](https://img.shields.io/github/issues/Sayshal/macro-keybinds?style=for-the-badge)
-![Latest Release Download Count](https://img.shields.io/github/downloads/Sayshal/macro-keybinds/latest/module.zip?color=2b82fc&label=Latest+Release+Download+Count&style=for-the-badge)
-![GitHub release (with filter)](https://img.shields.io/github/v/release/Sayshal/macro-keybinds?style=for-the-badge)
-![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https://github.com/Sayshal/macro-keybinds/releases/latest/download/module.json&label=Foundry%20Version&query=$.compatibility.verified&colorB=orange&style=for-the-badge)
+![GitHub release](https://img.shields.io/github/v/release/Sayshal/macro-keybinds?style=for-the-badge)
 ![GitHub all releases](https://img.shields.io/github/downloads/Sayshal/macro-keybinds/total?style=for-the-badge)
 ![Github License](https://img.shields.io/github/license/Sayshal/macro-keybinds?style=for-the-badge)
 
 ## Supporting The Module
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sayshal) [![](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sayshal) [![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
 
 ## Introduction
 
