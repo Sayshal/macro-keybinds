@@ -61,7 +61,6 @@ Hooks.on('init', () => {
   });
 });
 
-// Handle disabling default hotbar
 Hooks.on('ready', () => {
   const disableDefaultHotbar = game.settings.get('macro-keybinds', 'disableDefaultHotbar');
   console.log(`macro-keybinds | Checking disableDefaultHotbar: ${disableDefaultHotbar}`);
@@ -189,6 +188,53 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
   });
 });
 
+Hooks.on('updateMacro', async (macro, changes, options, userId) => {
+  if (userId !== game.user.id) return;
+
+  if (changes.name) {
+    console.log(`macro-keybinds | Macro name updated for ${macro.id}`);
+    const keybinds = game.settings.get('macro-keybinds', 'userKeybinds');
+
+    if (keybinds[macro.id]) {
+      // Update stored keybind data with new name
+      keybinds[macro.id].name = changes.name;
+
+      try {
+        // Transform modifiers to uppercase
+        const formattedModifiers = (keybinds[macro.id].modifiers || []).map((mod) => {
+          switch (mod) {
+            case 'Alt':
+              return 'ALT';
+            case 'Control':
+              return 'CONTROL';
+            case 'Shift':
+              return 'SHIFT';
+            case 'Meta':
+              return 'META';
+            default:
+              return mod.toUpperCase();
+          }
+        });
+
+        // Update the keybindings using set()
+        await game.keybindings.set('macro-keybinds', `execute.${macro.id}`, [
+          {
+            key: keybinds[macro.id].key,
+            modifiers: formattedModifiers
+          }
+        ]);
+
+        // Save updated settings
+        await game.settings.set('macro-keybinds', 'userKeybinds', keybinds);
+
+        console.log(`macro-keybinds | Updated macro name in keybinds to ${changes.name}`);
+      } catch (error) {
+        console.error('macro-keybinds | Error updating keybindings:', error);
+      }
+    }
+  }
+});
+
 function formatKeybind(keybind) {
   console.log('macro-keybinds | Formatting keybind:', { keybind: keybind });
   if (!keybind?.key) return '';
@@ -264,53 +310,6 @@ async function updateStoredKeybinds(macroId, keybindData = null) {
 
   console.groupEnd();
 }
-
-Hooks.on('updateMacro', async (macro, changes, options, userId) => {
-  if (userId !== game.user.id) return;
-
-  if (changes.name) {
-    console.log(`macro-keybinds | Macro name updated for ${macro.id}`);
-    const keybinds = game.settings.get('macro-keybinds', 'userKeybinds');
-
-    if (keybinds[macro.id]) {
-      // Update stored keybind data with new name
-      keybinds[macro.id].name = changes.name;
-
-      try {
-        // Transform modifiers to uppercase
-        const formattedModifiers = (keybinds[macro.id].modifiers || []).map((mod) => {
-          switch (mod) {
-            case 'Alt':
-              return 'ALT';
-            case 'Control':
-              return 'CONTROL';
-            case 'Shift':
-              return 'SHIFT';
-            case 'Meta':
-              return 'META';
-            default:
-              return mod.toUpperCase();
-          }
-        });
-
-        // Update the keybindings using set()
-        await game.keybindings.set('macro-keybinds', `execute.${macro.id}`, [
-          {
-            key: keybinds[macro.id].key,
-            modifiers: formattedModifiers
-          }
-        ]);
-
-        // Save updated settings
-        await game.settings.set('macro-keybinds', 'userKeybinds', keybinds);
-
-        console.log(`macro-keybinds | Updated macro name in keybinds to ${changes.name}`);
-      } catch (error) {
-        console.error('macro-keybinds | Error updating keybindings:', error);
-      }
-    }
-  }
-});
 
 function handleMacroKeybindings(checked) {
   console.log(`macro-keybinds | Handling macro keybindings: ${checked}`);
