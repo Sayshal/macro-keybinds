@@ -239,6 +239,46 @@ Hooks.on('updateMacro', async (macro, changes, options, userId) => {
   }
 });
 
+/** Pass new value from Configure Controls to the macro window  */
+Hooks.on('renderKeybindingsConfig', async (app, html, data) => {
+  // Get our current keybinds
+  const oldKeybinds = game.settings.get('macro-keybinds', 'userKeybinds');
+  const updatedKeybinds = {};
+
+  for (const macroId in oldKeybinds) {
+    const actionId = `macro-keybinds.execute.${macroId}`;
+    const binding = game.keybindings.get('macro-keybinds', `execute.${macroId}`);
+
+    if (binding && binding.length > 0) {
+      const macro = game.macros.get(macroId);
+      if (!macro) {
+        continue;
+      }
+
+      const keybindData = {
+        key: binding[0].key,
+        modifiers: binding[0].modifiers.map((mod) => mod.toLowerCase()),
+        userId: game.user.id,
+        name: macro.name
+      };
+
+      updatedKeybinds[macroId] = {
+        ...keybindData,
+        keybind: formatKeybind(keybindData)
+      };
+    } else {
+      console.log('No binding found');
+    }
+  }
+
+  // Only update if there are changes
+  if (JSON.stringify(oldKeybinds) !== JSON.stringify(updatedKeybinds)) {
+    await game.settings.set('macro-keybinds', 'userKeybinds', updatedKeybinds);
+  } else {
+    console.log('No changes detected');
+  }
+});
+
 function formatKeybind(keybind) {
   console.log('macro-keybinds | Formatting keybind:', { keybind: keybind });
   if (!keybind?.key) return '';
@@ -284,12 +324,21 @@ async function updateStoredKeybinds(macroId, keybindData = null) {
 
     // Update the keybindings using set()
     try {
-      await game.keybindings.set('macro-keybinds', `execute.${macroId}`, [
-        {
-          key: keybindData.key,
-          modifiers: formattedModifiers
-        }
-      ]);
+      // Check if this keybind action exists first
+      const actionExists = game.keybindings.bindings.has(`macro-keybinds.execute.${macroId}`);
+
+      if (actionExists) {
+        console.log(`macro-keybinds | Updating existing keybind for ${macroId}`);
+        await game.keybindings.set('macro-keybinds', `execute.${macroId}`, [
+          {
+            key: keybindData.key,
+            modifiers: formattedModifiers
+          }
+        ]);
+      } else {
+        console.log(`macro-keybinds | Keybind action not registered for ${macroId}, will be set on next reload`);
+        // Still save the data to settings so it's available on next init
+      }
     } catch (error) {
       console.error('macro-keybinds | Error setting keybindings:', error);
     }
