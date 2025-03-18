@@ -1,0 +1,1 @@
+- Update keybind in macro window if updated in Configure Controls menu.
