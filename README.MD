@@ -6,7 +6,7 @@
 
 ## Supporting The Module
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sayshal) [![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
+[![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
 
 ## Introduction
 
@@ -23,7 +23,7 @@ keys - now you can bind any macro to any key combination you want!
 
 ## Installation
 
-Install directly through Foundry's module manager or manually using this manifest URL:  
+Install directly through Foundry's module manager or manually using this manifest URL:
 `https://github.com/Sayshal/macro-keybinds/releases/latest/download/module.json`
 
 ## Usage
