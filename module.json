@@ -25,22 +25,11 @@
     "verified": "12"
   },
   "download": "https://github.com/Sayshal/macro-keybinds/releases/download/1.1.0/module.zip",
-  "esmodules": [
-    "scripts/macro-keybinds.js"
-  ],
+  "esmodules": ["scripts/macro-keybinds.js"],
   "flags": {
     "hotReload": {
-      "extensions": [
-        "css",
-        "html",
-        "hbs",
-        "json"
-      ],
-      "paths": [
-        "styles",
-        "lang",
-        "templates"
-      ]
+      "extensions": ["css", "html", "hbs", "json"],
+      "paths": ["styles", "lang", "templates"]
     }
   },
   "languages": [
@@ -50,6 +39,6 @@
       "path": "lang/en.json"
     }
   ],
-  "manifest": "https://github.com/Sayshal/macro-keybinds/releases/download/1.1.0/module.json",
+  "manifest": "https://github.com/Sayshal/macro-keybinds/releases/latest/module.json",
   "url": "https://github.com/Sayshal/macro-keybinds"
 }

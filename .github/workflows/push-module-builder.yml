@@ -2,8 +2,8 @@ name: Module Builder
 
 on:
   push:
-    tags:
-      - '[0-9].[0-9].[0-9]'
+    branches:
+      - main
 
 env:
   REPO_URL: https://github.com/${{ github.repository }}
@@ -56,13 +56,14 @@ jobs:
 
       - name: Zip Files
         run: |
-          zip -r ./module.zip ./ \
-            -x @.gitignore \
-            -x ".gitattributes" \
-            -x ".git/**" \
-            -x ".github/**" \
-            -x "release_notes.txt" \
-            -x "tour-assets/**"
+          # Create a zip with only the specified folders and files
+          zip -r ./module.zip \
+            lang/ \
+            scripts/ \
+            templates/ \
+            LICENSE \
+            module.json \
+            README.MD
 
       - name: Create Release
         id: create-release
@@ -84,8 +85,8 @@ jobs:
             "id": "macro-keybinds",
             "release": {
               "version": "${{ steps.get-version.outputs.version }}",
-              "manifest": "${{ env.REPO_URL }}/releases/download/${{ steps.get-version.outputs.version }}/module.json",
-              "download": "${{ env.REPO_URL }}/releases/download/${{ steps.get-version.outputs.version }}/module.zip",
+              "manifest": "${{ env.REPO_URL }}/releases/latest/download/module.json",
+              "download": "${{ env.REPO_URL }}/releases/latest/download/module.zip",
               "notes": "${{ env.REPO_URL }}/releases/tag/${{ steps.get-version.outputs.version }}",
               "compatibility": {
                 "minimum": "${{ steps.get-version.outputs.compat_min }}",
@@ -108,7 +109,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           VERSION="${{ steps.get-version.outputs.version }}"
-          RELEASE_NOTES=$(cat release_notes.txt | sed ':a;N;$!ba;s/\n/\\n/g')
+          RELEASE_NOTES=$(< release_notes.txt)
 
           JSON_PAYLOAD=$(jq -n \
             --arg title "Macro Keybinds Release" \
