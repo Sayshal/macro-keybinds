@@ -2,7 +2,7 @@
   "id": "macro-keybinds",
   "title": "Macro Keybinds",
   "description": "Allow users to bind macros to keys, not limited to macro bar.",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "bugs": "https://github.com/Sayshal/macro-keybinds/issues",
   "changelog": "https://github.com/Sayshal/macro-keybinds/releases",
   "license": "https://github.com/Sayshal/macro-keybinds?tab=MIT-1-ov-file",
@@ -21,8 +21,8 @@
   ],
   "compatibility": {
     "maximum": "13",
-    "minimum": "12",
-    "verified": "12"
+    "minimum": "13",
+    "verified": "13"
   },
   "download": "https://github.com/Sayshal/macro-keybinds/releases/download/1.1.0/module.zip",
   "esmodules": ["scripts/macro-keybinds.js"],
