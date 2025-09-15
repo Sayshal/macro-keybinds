@@ -59,9 +59,8 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
   }
   const keybindFormGroup = document.createElement('div');
   keybindFormGroup.className = 'form-group';
-  const noticeText =
-    isNewMacro ?
-      `<p class="notes" style="color: #ff6400; font-style: italic;">${game.i18n.localize('MACROKEYBINDS.NoticeWillApply')}</p>`
+  const noticeText = isNewMacro
+    ? `<p class="notes" style="color: #ff6400; font-style: italic;">${game.i18n.localize('MACROKEYBINDS.NoticeWillApply')}</p>`
     : `<p class="notes">${game.i18n.localize('MACROKEYBINDS.Instructions')}</p>`;
   keybindFormGroup.innerHTML = `
     <label>${game.i18n.localize('MACROKEYBINDS.Label')}</label>
