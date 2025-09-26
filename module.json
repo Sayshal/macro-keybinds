@@ -22,7 +22,7 @@
   "compatibility": {
     "maximum": "13",
     "minimum": "13",
-    "verified": "13"
+    "verified": "13.348"
   },
   "download": "https://github.com/Sayshal/macro-keybinds/releases/download/1.1.0/module.zip",
   "esmodules": ["scripts/macro-keybinds.js"],

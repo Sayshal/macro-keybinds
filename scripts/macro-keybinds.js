@@ -204,7 +204,7 @@ function registerSettings() {
     }
   });
   game.settings.register('macro-keybinds', 'userKeybinds', {
-    scope: 'client',
+    scope: 'user',
     config: false,
     type: Object,
     default: {},
@@ -223,7 +223,7 @@ function registerStoredKeybindings() {
     const standardizedModifiers = standardizeModifiers(data.modifiers || []);
     try {
       game.keybindings.register('macro-keybinds', `execute.${macroId}`, {
-        name: game.i18n.format('MACROKEYBINDS.ExecuteName', { name: data.name || 'Unknown' }),
+        name: data.name,
         editable: [{ key: data.key, modifiers: standardizedModifiers }],
         onDown: () => {
           const macro = game.macros.get(macroId);

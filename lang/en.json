@@ -1,7 +1,6 @@
 {
   "MACROKEYBINDS": {
     "ApplyingPending": "Applying pending keybind to macro {name}",
-    "ExecuteName": "Execute Macro: {name}",
     "Instructions": "Press key combination, Delete/Backspace to clear. Supports modifier keys (Ctrl, Alt, Shift)",
     "Label": "Keybind",
     "NoticeWillApply": "Keybind will be applied when macro is saved",
