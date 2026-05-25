@@ -1,0 +1,3 @@
+- Verified against Foundry v14.363; minimum bumped to v13.351.
+- Fixed the keybinding-sync between *Configure Controls* and the macro sheet (silently broken since the v13 AppV2 refactor renamed `KeybindingsConfig` to `ControlsConfig`).
+- Removed a dead Hotbar override that would have thrown if AppV2 ever invoked it.

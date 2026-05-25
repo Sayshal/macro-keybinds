@@ -1,7 +1,11 @@
 const pendingKeybinds = new Map();
 
+const MODIFIER_CODES = ['AltLeft', 'AltRight', 'ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight', 'ShiftLeft', 'ShiftRight'];
+const PENDING_TTL_MS = 30_000;
+
 /**
- * Get user keybinds with type safety
+ * Read the userKeybinds setting, self-healing if a corrupt non-object slipped in.
+ * @returns {object} Map of macroId to stored keybind entry.
  */
 function getUserKeybinds() {
   let keybinds = game.settings.get('macro-keybinds', 'userKeybinds');
@@ -13,7 +17,9 @@ function getUserKeybinds() {
 }
 
 /**
- * Set user keybinds with type safety
+ * Persist the userKeybinds setting, coercing invalid input to an empty object.
+ * @param {object} keybinds Map of macroId to stored keybind entry.
+ * @returns {Promise<void>}
  */
 async function setUserKeybinds(keybinds) {
   if (Array.isArray(keybinds) || typeof keybinds !== 'object' || keybinds === null) keybinds = {};
@@ -26,33 +32,14 @@ Hooks.on('init', () => {
   registerStoredKeybindings();
 });
 
-Hooks.on('ready', () => {
-  const disableDefaultHotbar = game.settings.get('macro-keybinds', 'disableDefaultHotbar');
-  console.log(`macro-keybinds | Checking disableDefaultHotbar: ${disableDefaultHotbar}`);
-  if (disableDefaultHotbar) {
-    console.log('macro-keybinds | Disabling default hotbar number keys');
-    const HotbarClass = foundry?.applications?.ui?.Hotbar || Hotbar;
-    const originalHotbarKeyHandler = HotbarClass.prototype._onClickMacro;
-    HotbarClass.prototype._onClickMacro = function (event, ...args) {
-      if (event.key && /^\d$/.test(event.key)) {
-        event.preventDefault();
-        return;
-      }
-      return originalHotbarKeyHandler.call(this, event, ...args);
-    };
-  }
-});
-
-Hooks.on('renderMacroConfig', (app, html, data) => {
-  const macro = app?.document || app?.object || data?.document || data?.source;
-  const macroId = macro?._id || macro?.id;
-  const isNewMacro = !macroId || macroId === null;
+Hooks.on('renderMacroConfig', (app, html) => {
+  const macro = app?.document;
+  const macroId = macro?.id;
+  const isNewMacro = !macroId;
   const tempId = isNewMacro ? `temp-${app.id}` : macroId;
   const keybinds = getUserKeybinds();
   const currentKeybind = isNewMacro ? pendingKeybinds.get(tempId)?.keybind || '' : keybinds[macroId]?.keybind || '';
-  const modifierCodes = ['AltLeft', 'AltRight', 'ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight', 'ShiftLeft', 'ShiftRight'];
-  const typeSelect = html.querySelector('select[name="type"]');
-  const typeFormGroup = typeSelect?.closest('div.form-group');
+  const typeFormGroup = html.querySelector('select[name="type"]')?.closest('div.form-group');
   if (!typeFormGroup) {
     console.warn('macro-keybinds | Could not find type form group');
     return;
@@ -71,10 +58,10 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
   `;
   typeFormGroup.parentNode.insertBefore(keybindFormGroup, typeFormGroup.nextSibling);
   const input = html.querySelector('input[name="macro-keybind"]');
-  let activeModifiers = new Set();
+  const activeModifiers = new Set();
   input.addEventListener('keydown', async (event) => {
     event.preventDefault();
-    if (modifierCodes.includes(event.code)) {
+    if (MODIFIER_CODES.includes(event.code)) {
       activeModifiers.add(event.code);
       return;
     }
@@ -88,29 +75,22 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
       key: event.code,
       simKey: event.key.toUpperCase(),
       modifiers: getStandardizedModifiers(activeModifiers),
-      userId: game.user.id,
       name: macro.name
     };
     const keybindString = formatKeybind(keybindData);
     input.value = keybindString;
     const keybinds = getUserKeybinds();
-    Object.entries(keybinds).forEach(([id, data]) => {
+    for (const [id, data] of Object.entries(keybinds)) {
       if (data.keybind === keybindString && id !== macroId) {
         console.log(game.i18n.format('MACROKEYBINDS.RemovingDuplicate', { id }));
         delete keybinds[id];
       }
-    });
+    }
     for (const [pendingId, pendingData] of pendingKeybinds.entries()) {
       if (pendingData.keybind === keybindString && pendingId !== tempId) pendingKeybinds.delete(pendingId);
     }
     if (isNewMacro) {
-      pendingKeybinds.set(tempId, {
-        ...keybindData,
-        keybind: keybindString,
-        originalName: macro.name,
-        timestamp: Date.now(),
-        formId: app.id
-      });
+      pendingKeybinds.set(tempId, { ...keybindData, keybind: keybindString, timestamp: Date.now() });
       ui.notifications.info(game.i18n.localize('MACROKEYBINDS.NotificationWillApply'));
     } else {
       await updateStoredKeybinds(macroId, keybindData);
@@ -118,174 +98,109 @@ Hooks.on('renderMacroConfig', (app, html, data) => {
     }
   });
   input.addEventListener('keyup', (event) => {
-    if (modifierCodes.includes(event.code)) activeModifiers.delete(event.code);
+    if (MODIFIER_CODES.includes(event.code)) activeModifiers.delete(event.code);
   });
 });
 
-Hooks.on('updateMacro', async (macro, changes, options, userId) => {
-  if (userId !== game.user.id) return;
-  const macroId = macro._id || macro.id;
-  if (changes.name) {
-    console.log(game.i18n.format('MACROKEYBINDS.UpdatingName', { id: macroId }));
-    const keybinds = getUserKeybinds();
-    if (keybinds[macroId]) {
-      keybinds[macroId].name = changes.name;
-      try {
-        await setUserKeybinds(keybinds);
-        console.log(game.i18n.format('MACROKEYBINDS.UpdatedName', { name: changes.name }));
-      } catch (error) {
-        console.error('macro-keybinds | Error updating keybindings:', error);
-      }
-    }
-  }
+Hooks.on('updateMacro', async (macro, changes, _options, userId) => {
+  if (userId !== game.user.id || !changes.name) return;
+  const keybinds = getUserKeybinds();
+  if (!keybinds[macro.id]) return;
+  keybinds[macro.id].name = changes.name;
+  await setUserKeybinds(keybinds);
 });
 
-Hooks.on('createMacro', async (macro, options, userId) => {
+Hooks.on('createMacro', async (macro, _options, userId) => {
   if (userId !== game.user.id) return;
-  const macroId = macro._id || macro.id;
   const now = Date.now();
-  const timeThreshold = 30000;
   let mostRecentPending = null;
   let mostRecentKey = null;
   let mostRecentTime = 0;
   for (const [key, pendingData] of pendingKeybinds.entries()) {
     const age = now - (pendingData.timestamp || 0);
-    if (age <= timeThreshold && pendingData.timestamp > mostRecentTime) {
+    if (age <= PENDING_TTL_MS && pendingData.timestamp > mostRecentTime) {
       mostRecentPending = pendingData;
       mostRecentKey = key;
       mostRecentTime = pendingData.timestamp;
     }
   }
-  if (mostRecentPending) {
-    console.log(game.i18n.format('MACROKEYBINDS.ApplyingPending', { name: macro.name }));
-    const keybindData = { ...mostRecentPending, name: macro.name, userId: game.user.id };
-    await updateStoredKeybinds(macroId, keybindData);
-    pendingKeybinds.delete(mostRecentKey);
-    ui.notifications.info(
-      game.i18n.format('MACROKEYBINDS.NotificationApplied', {
-        keybind: mostRecentPending.keybind,
-        name: macro.name
-      })
-    );
-  }
+  if (!mostRecentPending) return;
+  const keybindData = { ...mostRecentPending, name: macro.name };
+  await updateStoredKeybinds(macro.id, keybindData);
+  pendingKeybinds.delete(mostRecentKey);
+  ui.notifications.info(game.i18n.format('MACROKEYBINDS.NotificationApplied', { keybind: mostRecentPending.keybind, name: macro.name }));
 });
 
-Hooks.on('renderKeybindingsConfig', async (app, html, data) => {
+Hooks.on('renderControlsConfig', async () => {
   const oldKeybinds = getUserKeybinds();
   const updatedKeybinds = {};
   for (const macroId in oldKeybinds) {
     const binding = game.keybindings.get('macro-keybinds', `execute.${macroId}`);
     const macro = game.macros.get(macroId);
-    if (binding && binding.length > 0 && macro) {
-      const keybindData = {
-        key: binding[0].key,
-        modifiers: standardizeModifiers(binding[0].modifiers),
-        userId: game.user.id,
-        name: macro.name
-      };
+    if (binding?.length && macro) {
+      const keybindData = { key: binding[0].key, modifiers: standardizeModifiers(binding[0].modifiers), name: macro.name };
       updatedKeybinds[macroId] = { ...keybindData, keybind: formatKeybind(keybindData) };
     }
   }
   if (JSON.stringify(oldKeybinds) !== JSON.stringify(updatedKeybinds)) await setUserKeybinds(updatedKeybinds);
 });
 
+/** Register the module's two client/user settings. */
 function registerSettings() {
   game.settings.register('macro-keybinds', 'disableDefaultHotbar', {
-    name: game.i18n.localize('MACROKEYBINDS.SettingName'),
-    hint: game.i18n.localize('MACROKEYBINDS.SettingHint'),
+    name: 'MACROKEYBINDS.SettingName',
+    hint: 'MACROKEYBINDS.SettingHint',
     scope: 'client',
     config: true,
     type: Boolean,
     default: false,
     requiresReload: true,
-    onChange: (value) => {
-      console.log(game.i18n.format('MACROKEYBINDS.SettingChanged', { value }));
-      handleMacroKeybindings(value);
-    }
+    onChange: (value) => (value ? deleteMacroKeybindings() : resetMacroKeybindings())
   });
-  game.settings.register('macro-keybinds', 'userKeybinds', {
-    scope: 'user',
-    config: false,
-    type: Object,
-    default: {},
-    onChange: (value) => {
-      console.log('macro-keybinds | userKeybinds setting updated');
-    }
-  });
+  game.settings.register('macro-keybinds', 'userKeybinds', { scope: 'user', config: false, type: Object, default: {} });
 }
 
+/** Register a Foundry keybinding action for every macro with a stored keybind. */
 function registerStoredKeybindings() {
   const keybinds = getUserKeybinds();
   console.log('macro-keybinds | Registering stored keybindings');
-  Object.entries(keybinds).forEach(([macroId, data]) => {
-    if (!data?.key) return;
-    if (!macroId || macroId === 'undefined' || macroId === 'null') return;
-    const standardizedModifiers = standardizeModifiers(data.modifiers || []);
+  for (const [macroId, data] of Object.entries(keybinds)) {
+    if (!data?.key || !macroId || macroId === 'undefined' || macroId === 'null') continue;
+    const modifiers = standardizeModifiers(data.modifiers || []);
     try {
       game.keybindings.register('macro-keybinds', `execute.${macroId}`, {
         name: data.name,
-        editable: [{ key: data.key, modifiers: standardizedModifiers }],
+        editable: [{ key: data.key, modifiers }],
         onDown: () => {
-          const macro = game.macros.get(macroId);
-          if (macro) macro.execute();
+          game.macros.get(macroId)?.execute();
           return true;
         },
-        onUp: () => {},
-        restricted: false,
-        reservedModifiers: [],
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
       });
     } catch (error) {
       console.error('macro-keybinds | Error registering keybinding:', error);
     }
-  });
+  }
 }
 
-function handleMacroKeybindings(checked) {
-  if (checked) return deleteMacroKeybindings();
-  else return resetMacroKeybindings();
-}
-
+/** Clear all core executeMacro<N> bindings so number keys no longer fire the hotbar. */
 async function deleteMacroKeybindings() {
-  console.log('macro-keybinds | Deleting default macro keybindings');
-  for (let [actionId, bindings] of game.keybindings.bindings) {
-    const isCoreMacroAction = actionId.match(/^core\.executeMacro\d$/);
-    if (isCoreMacroAction) {
-      try {
-        await game.keybindings.set('core', actionId.split('.')[1], []);
-      } catch (error) {
-        console.error(`macro-keybinds | Error deleting keybindings for ${actionId}:`, error);
-      }
-    }
+  for (const [actionId] of game.keybindings.bindings) {
+    if (!/^core\.executeMacro\d$/.test(actionId)) continue;
+    await game.keybindings.set('core', actionId.split('.')[1], []);
   }
 }
 
+/** Restore the default Digit0–Digit9 bindings for core executeMacro<N>. */
 async function resetMacroKeybindings() {
-  console.log('macro-keybinds | Resetting macro keybindings');
-  const defaultMacroBindings = {
-    executeMacro0: [{ key: 'Digit0', modifiers: [] }],
-    executeMacro1: [{ key: 'Digit1', modifiers: [] }],
-    executeMacro2: [{ key: 'Digit2', modifiers: [] }],
-    executeMacro3: [{ key: 'Digit3', modifiers: [] }],
-    executeMacro4: [{ key: 'Digit4', modifiers: [] }],
-    executeMacro5: [{ key: 'Digit5', modifiers: [] }],
-    executeMacro6: [{ key: 'Digit6', modifiers: [] }],
-    executeMacro7: [{ key: 'Digit7', modifiers: [] }],
-    executeMacro8: [{ key: 'Digit8', modifiers: [] }],
-    executeMacro9: [{ key: 'Digit9', modifiers: [] }]
-  };
-
-  for (let [action, bindings] of Object.entries(defaultMacroBindings)) {
-    try {
-      await game.keybindings.set('core', action, bindings);
-    } catch (error) {
-      console.error(`macro-keybinds | Error resetting keybindings for core.${action}:`, error);
-    }
-  }
+  for (let i = 0; i < 10; i++) await game.keybindings.set('core', `executeMacro${i}`, [{ key: `Digit${i}`, modifiers: [] }]);
 }
 
 /**
- * Update stored keybindings for a macro
+ * Write (or delete) the stored keybind for a macro and sync the active binding.
+ * @param {string} macroId The macro document id to bind against.
+ * @param {object|null} [keybindData] Pass null/undefined to remove the binding.
+ * @returns {Promise<void>}
  */
 async function updateStoredKeybinds(macroId, keybindData = null) {
   if (!macroId || macroId === 'undefined' || macroId === 'null') {
@@ -294,44 +209,29 @@ async function updateStoredKeybinds(macroId, keybindData = null) {
   }
   const keybinds = getUserKeybinds();
   if (keybindData) {
-    const standardizedModifiers = standardizeModifiers(keybindData.modifiers || []);
-    keybinds[macroId] = {
-      key: keybindData.key,
-      name: keybindData.name,
-      userId: keybindData.userId,
-      modifiers: standardizedModifiers,
-      keybind: formatKeybind({
-        ...keybindData,
-        modifiers: standardizedModifiers
-      })
-    };
-    try {
-      const actionExists = game.keybindings.bindings.has(`macro-keybinds.execute.${macroId}`);
-      if (actionExists) await game.keybindings.set('macro-keybinds', `execute.${macroId}`, [{ key: keybindData.key, modifiers: standardizedModifiers }]);
-    } catch (error) {
-      console.error('macro-keybinds | Error setting keybindings:', error);
-    }
+    const modifiers = standardizeModifiers(keybindData.modifiers || []);
+    keybinds[macroId] = { key: keybindData.key, name: keybindData.name, modifiers, keybind: formatKeybind({ ...keybindData, modifiers }) };
+    if (game.keybindings.bindings.has(`macro-keybinds.execute.${macroId}`)) await game.keybindings.set('macro-keybinds', `execute.${macroId}`, [{ key: keybindData.key, modifiers }]);
   } else delete keybinds[macroId];
-  try {
-    await setUserKeybinds(keybinds);
-  } catch (error) {
-    console.error('macro-keybinds | Error saving settings:', error);
-  }
+  await setUserKeybinds(keybinds);
 }
 
 /**
- * Format a keybind object into a human-readable string
+ * Render a keybind as a human-readable string like `CTRL+SHIFT+G`.
+ * @param {object} keybind Keybind shape with `key`, optional `simKey`, optional `modifiers`.
+ * @returns {string} The formatted modifier+key string, or `''` when no key is set.
  */
 function formatKeybind(keybind) {
   if (!keybind?.key) return '';
   const displayKey = keybind.simKey || getDisplayKey(keybind.key);
   const uniqueModifiers = [...new Set(keybind.modifiers || [])];
-  const formattedKeybind = [...uniqueModifiers, displayKey].join('+');
-  return formattedKeybind;
+  return [...uniqueModifiers, displayKey].join('+');
 }
 
 /**
- * Convert a key code to a display-friendly format
+ * Strip the `Key`/`Digit` prefix from a KeyboardEvent.code for display.
+ * @param {string} keyCode Raw KeyboardEvent.code value.
+ * @returns {string} Display-friendly key name.
  */
 function getDisplayKey(keyCode) {
   if (keyCode.startsWith('Key')) return keyCode.substring(3);
@@ -340,20 +240,24 @@ function getDisplayKey(keyCode) {
 }
 
 /**
- * Convert a set of modifier key codes into standardized modifier names
+ * Convert KeyboardEvent.code modifier names (e.g. AltLeft) to Foundry modifier tokens (ALT).
+ * @param {Set<string>} modifierSet Active modifier KeyboardEvent.code values.
+ * @returns {string[]} Foundry modifier tokens.
  */
 function getStandardizedModifiers(modifierSet) {
   return Array.from(modifierSet).map((mod) => {
     if (mod.startsWith('Alt')) return 'ALT';
     if (mod.startsWith('Control')) return 'CONTROL';
     if (mod.startsWith('Shift')) return 'SHIFT';
-    if (mod.startsWith('Meta') || mod.startsWith('Os')) return 'META';
+    if (mod.startsWith('Meta')) return 'META';
     return mod;
   });
 }
 
 /**
- * Standardize modifiers to ensure consistent format
+ * Normalize already-Foundry-formatted modifier names (handles CTRL/OPTION/COMMAND aliases).
+ * @param {string[]} modifiers Modifier names in any supported casing/alias.
+ * @returns {string[]} Canonical Foundry modifier tokens.
  */
 function standardizeModifiers(modifiers) {
   return modifiers.map((mod) => {
