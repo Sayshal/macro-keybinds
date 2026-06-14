@@ -1,7 +1,7 @@
 {
   "id": "macro-keybinds",
   "title": "Macro Keybinds",
-  "description": "Allow users to bind macros to keys, not limited to macro bar.",
+  "description": "The macro hotbar gives you ten number keys and that's it. Macro Keybinds adds a Keybind field to the macro config so you can fire any macro from any key combo you like, modifiers included, and optionally take over the default 1-0 hotbar keys while you're at it. Each player sets their own.",
   "version": "",
   "bugs": "https://github.com/Sayshal/macro-keybinds/issues",
   "changelog": "https://github.com/Sayshal/macro-keybinds/releases",
