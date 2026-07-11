@@ -70,11 +70,11 @@ jobs:
             scripts/ \
             LICENSE \
             module.json \
+            release_notes.txt \
             README.MD \
             -x "*.lock" \
             -x "package*.json" \
             -x "node_modules/*" \
-            -x "release_notes.txt"
 
       # Fetch existing release body if it exists
       - name: Fetch Release Body
