@@ -1,3 +1,13 @@
-- Verified against Foundry v14.363; minimum bumped to v13.351.
-- Fixed the keybinding-sync between *Configure Controls* and the macro sheet (silently broken since the v13 AppV2 refactor renamed `KeybindingsConfig` to `ControlsConfig`).
-- Removed a dead Hotbar override that would have thrown if AppV2 ever invoked it.
+## Breaking Changes
+
+- Now requires the 3DS:ATLAS module as a dependency.
+- Raised the minimum Foundry version to 14 (verified 14.364).
+
+## Changes
+
+- Reworked the GitHub bug report and feature request forms, and added a Discord contact link for support.
+- Updated bug report form version placeholders to Foundry 14.364 and dnd5e 6.0.0.
+
+## Documentation
+
+- Refreshed the module listing description to clarify what Macro Keybinds does.
