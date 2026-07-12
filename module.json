@@ -18,24 +18,25 @@
     }
   ],
   "compatibility": {
-    "minimum": "13.351",
-    "verified": "14.363"
+    "minimum": "14",
+    "verified": "14.364"
+  },
+  "relationships": {
+    "requires": [
+      {
+        "id": "3ds-atlas",
+        "type": "module"
+      }
+    ]
   },
   "download": "",
   "esmodules": ["scripts/macro-keybinds.js"],
   "flags": {
     "hotReload": {
       "extensions": ["css", "html", "hbs", "json"],
-      "paths": ["styles", "lang", "templates"]
+      "paths": ["styles", "templates"]
     }
   },
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    }
-  ],
   "manifest": "https://github.com/Sayshal/macro-keybinds/releases/latest/download/module.json",
   "url": "https://github.com/Sayshal/macro-keybinds"
 }

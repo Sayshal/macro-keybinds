@@ -27,7 +27,8 @@ async function setUserKeybinds(keybinds) {
 }
 
 Hooks.on('init', () => {
-  console.log('macro-keybinds | Initializing module');
+  ATLAS.register('macro-keybinds', { title: 'Macro Keybinds', github: 'Sayshal/macro-keybinds' });
+  ATLAS.log(3, 'Initializing module');
   registerSettings();
   registerStoredKeybindings();
 });
@@ -41,18 +42,18 @@ Hooks.on('renderMacroConfig', (app, html) => {
   const currentKeybind = isNewMacro ? pendingKeybinds.get(tempId)?.keybind || '' : keybinds[macroId]?.keybind || '';
   const typeFormGroup = html.querySelector('select[name="type"]')?.closest('div.form-group');
   if (!typeFormGroup) {
-    console.warn('macro-keybinds | Could not find type form group');
+    ATLAS.log(2, 'Could not find type form group');
     return;
   }
   const keybindFormGroup = document.createElement('div');
   keybindFormGroup.className = 'form-group';
   const noticeText = isNewMacro
-    ? `<p class="notes" style="color: #ff6400; font-style: italic;">${game.i18n.localize('MACROKEYBINDS.NoticeWillApply')}</p>`
-    : `<p class="notes">${game.i18n.localize('MACROKEYBINDS.Instructions')}</p>`;
+    ? `<p class="notes" style="color: #ff6400; font-style: italic;">${_loc('MACROKEYBINDS.NoticeWillApply')}</p>`
+    : `<p class="notes">${_loc('MACROKEYBINDS.Instructions')}</p>`;
   keybindFormGroup.innerHTML = `
-    <label>${game.i18n.localize('MACROKEYBINDS.Label')}</label>
+    <label>${_loc('MACROKEYBINDS.Label')}</label>
     <div class="form-fields">
-      <input type="text" name="macro-keybind" value="${currentKeybind}" placeholder="${game.i18n.localize('MACROKEYBINDS.Placeholder')}">
+      <input type="text" name="macro-keybind" value="${currentKeybind}" placeholder="${_loc('MACROKEYBINDS.Placeholder')}">
     </div>
     ${noticeText}
   `;
@@ -82,7 +83,7 @@ Hooks.on('renderMacroConfig', (app, html) => {
     const keybinds = getUserKeybinds();
     for (const [id, data] of Object.entries(keybinds)) {
       if (data.keybind === keybindString && id !== macroId) {
-        console.log(game.i18n.format('MACROKEYBINDS.RemovingDuplicate', { id }));
+        ATLAS.log(3, _loc('MACROKEYBINDS.RemovingDuplicate', { id }));
         delete keybinds[id];
       }
     }
@@ -91,10 +92,10 @@ Hooks.on('renderMacroConfig', (app, html) => {
     }
     if (isNewMacro) {
       pendingKeybinds.set(tempId, { ...keybindData, keybind: keybindString, timestamp: Date.now() });
-      ui.notifications.info(game.i18n.localize('MACROKEYBINDS.NotificationWillApply'));
+      ui.notifications.info('MACROKEYBINDS.NotificationWillApply');
     } else {
       await updateStoredKeybinds(macroId, keybindData);
-      ui.notifications.info(game.i18n.localize('MACROKEYBINDS.NotificationSaved'));
+      ui.notifications.info('MACROKEYBINDS.NotificationSaved');
     }
   });
   input.addEventListener('keyup', (event) => {
@@ -128,7 +129,7 @@ Hooks.on('createMacro', async (macro, _options, userId) => {
   const keybindData = { ...mostRecentPending, name: macro.name };
   await updateStoredKeybinds(macro.id, keybindData);
   pendingKeybinds.delete(mostRecentKey);
-  ui.notifications.info(game.i18n.format('MACROKEYBINDS.NotificationApplied', { keybind: mostRecentPending.keybind, name: macro.name }));
+  ui.notifications.info('MACROKEYBINDS.NotificationApplied', { format: { keybind: mostRecentPending.keybind, name: macro.name } });
 });
 
 Hooks.on('renderControlsConfig', async () => {
@@ -163,7 +164,7 @@ function registerSettings() {
 /** Register a Foundry keybinding action for every macro with a stored keybind. */
 function registerStoredKeybindings() {
   const keybinds = getUserKeybinds();
-  console.log('macro-keybinds | Registering stored keybindings');
+  ATLAS.log(3, 'Registering stored keybindings');
   for (const [macroId, data] of Object.entries(keybinds)) {
     if (!data?.key || !macroId || macroId === 'undefined' || macroId === 'null') continue;
     const modifiers = standardizeModifiers(data.modifiers || []);
@@ -178,7 +179,7 @@ function registerStoredKeybindings() {
         precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL
       });
     } catch (error) {
-      console.error('macro-keybinds | Error registering keybinding:', error);
+      ATLAS.log(1, 'Error registering keybinding:', error);
     }
   }
 }
@@ -204,7 +205,7 @@ async function resetMacroKeybindings() {
  */
 async function updateStoredKeybinds(macroId, keybindData = null) {
   if (!macroId || macroId === 'undefined' || macroId === 'null') {
-    console.warn('macro-keybinds | Cannot store keybind for invalid macro ID:', macroId);
+    ATLAS.log(2, 'Cannot store keybind for invalid macro ID:', macroId);
     return;
   }
   const keybinds = getUserKeybinds();
