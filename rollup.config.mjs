@@ -31,7 +31,7 @@ export default {
         { src: 'module.json', dest: 'dist' },
         { src: 'release_notes.txt', dest: 'dist' },
         { src: 'LICENSE', dest: 'dist' },
-        { src: 'README.MD', dest: 'dist' }
+        { src: 'README.md', dest: 'dist' }
       ]
     })
   ]
