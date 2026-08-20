@@ -2,15 +2,23 @@ const pendingKeybinds = new Map();
 
 const MODIFIER_CODES = ['AltLeft', 'AltRight', 'ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight', 'ShiftLeft', 'ShiftRight'];
 const PENDING_TTL_MS = 30_000;
+const INVALID_MACRO_IDS = ['undefined', 'null'];
 
 /**
- * Read the userKeybinds setting, self-healing if a corrupt non-object slipped in.
+ * Read the userKeybinds setting.
  * @returns {object} Map of macroId to stored keybind entry.
  */
 function getUserKeybinds() {
   let keybinds = game.settings.get('macro-keybinds', 'userKeybinds');
   if (Array.isArray(keybinds) || typeof keybinds !== 'object' || keybinds === null) {
     keybinds = {};
+    game.settings.set('macro-keybinds', 'userKeybinds', keybinds);
+    return keybinds;
+  }
+  const garbage = INVALID_MACRO_IDS.filter((id) => id in keybinds);
+  if (garbage.length) {
+    for (const id of garbage) delete keybinds[id];
+    ATLAS.log(2, `Discarded ${garbage.length} keybind(s) stored against an invalid macro ID`);
     game.settings.set('macro-keybinds', 'userKeybinds', keybinds);
   }
   return keybinds;
@@ -166,7 +174,7 @@ function registerStoredKeybindings() {
   const keybinds = getUserKeybinds();
   ATLAS.log(3, 'Registering stored keybindings');
   for (const [macroId, data] of Object.entries(keybinds)) {
-    if (!data?.key || !macroId || macroId === 'undefined' || macroId === 'null') continue;
+    if (!data?.key) continue;
     const modifiers = standardizeModifiers(data.modifiers || []);
     try {
       game.keybindings.register('macro-keybinds', `execute.${macroId}`, {
@@ -204,7 +212,7 @@ async function resetMacroKeybindings() {
  * @returns {Promise<void>}
  */
 async function updateStoredKeybinds(macroId, keybindData = null) {
-  if (!macroId || macroId === 'undefined' || macroId === 'null') {
+  if (!macroId || INVALID_MACRO_IDS.includes(macroId)) {
     ATLAS.log(2, 'Cannot store keybind for invalid macro ID:', macroId);
     return;
   }
