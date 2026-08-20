@@ -30,7 +30,7 @@
     ]
   },
   "download": "",
-  "esmodules": ["scripts/macro-keybinds.js"],
+  "esmodules": ["macro-keybinds.mjs"],
   "flags": {
     "hotReload": {
       "extensions": ["css", "html", "hbs", "json"],

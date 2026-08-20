@@ -1,3 +1,4 @@
-DND5E
-Foundry
 macro-keybinds.lock
+/dist
+/node_modules
+README.html
