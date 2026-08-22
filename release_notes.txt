@@ -1,13 +1,10 @@
-## Breaking Changes
+## Bug Fixes
 
-- Now requires the 3DS:ATLAS module as a dependency.
-- Raised the minimum Foundry version to 14 (verified 14.364).
+- Keybinds using Meta/Command now register instead of failing: modifiers are read from Foundry's KeyboardManager, so Meta folds into Control and combinations display as `Control+Shift+G` rather than `CONTROL+SHIFT+G`.
+- Opening Configure Controls no longer erases stored keybinds whose keybinding action has not been registered yet.
+- Reading the stored keybinds no longer writes the setting back, which could throw during init before settings were ready.
 
 ## Changes
 
-- Reworked the GitHub bug report and feature request forms, and added a Discord contact link for support.
-- Updated bug report form version placeholders to Foundry 14.364 and dnd5e 6.0.0.
-
-## Documentation
-
-- Refreshed the module listing description to clarify what Macro Keybinds does.
+- Bumped the verified Foundry compatibility to 14.366.
+- The Keybind field in the macro config is built with the core form-field helpers, so the unsaved-macro notice renders as a standard warning notification instead of inline orange text.
