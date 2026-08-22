@@ -1,0 +1,33 @@
+{
+  "name": "macro-keybinds",
+  "version": "1.0.0",
+  "description": "Bind any macro to any key combination from the macro config window",
+  "scripts": {
+    "lint": "eslint . --ext .js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .js,.mjs,.cjs --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint && npm run format:check",
+    "build": "rollup -c rollup.config.mjs",
+    "build:watch": "rollup -c rollup.config.mjs --watch",
+    "dev": "rollup -c rollup.config.mjs --environment BUILD:development",
+    "clean": "node -e \"import('fs').then(f=>f.rmSync('dist',{recursive:true,force:true}))\""
+  },
+  "author": "Tyler",
+  "license": "MIT",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/Sayshal/macro-keybinds/issues"
+  },
+  "homepage": "https://github.com/Sayshal/macro-keybinds#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@rollup/plugin-terser": "^1.0.0",
+    "eslint": "^9.27.0",
+    "eslint-plugin-jsdoc": "^50.8.0",
+    "globals": "^15.15.0",
+    "prettier": "^3.3.3",
+    "rollup": "^4.59.0",
+    "rollup-plugin-copy": "^3.5.0"
+  }
+}
