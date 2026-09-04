@@ -60,10 +60,10 @@ async function onKeybindPressed(event, { macro, macroId, tempId, isNewMacro, act
   for (const [pendingId, pendingData] of pendingKeybinds.entries()) if (pendingData.keybind === keybindString && pendingId !== tempId) pendingKeybinds.delete(pendingId);
   if (isNewMacro) {
     pendingKeybinds.set(tempId, { ...keybindData, keybind: keybindString, timestamp: Date.now() });
-    ui.notifications.info('MACROKEYBINDS.Config.PendingHint');
+    ui.notifications.info('MACROKEYBINDS.Config.PendingHint', { localize: true });
   } else {
     await updateStoredKeybinds(macroId, keybindData);
-    ui.notifications.info('MACROKEYBINDS.Notify.Saved');
+    ui.notifications.info('MACROKEYBINDS.Notify.Saved', { localize: true });
   }
 }
 
