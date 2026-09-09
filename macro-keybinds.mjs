@@ -1,3 +1,4 @@
+import './styles/macro-keybinds.css';
 import { MODULE } from './scripts/constants.mjs';
 import { registerHooks } from './scripts/hooks.mjs';
 import { registerStoredKeybindings } from './scripts/keybinds.mjs';
