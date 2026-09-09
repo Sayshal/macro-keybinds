@@ -1,5 +1,6 @@
 import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
+import postcss from 'rollup-plugin-postcss';
 
 const isDev = process.env.BUILD === 'development';
 
@@ -21,6 +22,10 @@ export default {
     inlineDynamicImports: true
   },
   plugins: [
+    postcss({
+      extract: 'styles/macro-keybinds.css',
+      minimize: false
+    }),
     !isDev &&
       terser({
         format: { comments: false }
@@ -28,6 +33,8 @@ export default {
     copy({
       copyOnce: false,
       targets: [
+        { src: 'templates', dest: 'dist' },
+        { src: 'lang', dest: 'dist' },
         { src: 'module.json', dest: 'dist' },
         { src: 'release_notes.txt', dest: 'dist' },
         { src: 'LICENSE', dest: 'dist' },
