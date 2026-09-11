@@ -31,6 +31,7 @@
   },
   "download": "",
   "esmodules": ["macro-keybinds.mjs"],
+  "styles": ["styles/macro-keybinds.css"],
   "manifest": "https://github.com/Sayshal/macro-keybinds/releases/latest/download/module.json",
   "url": "https://github.com/Sayshal/macro-keybinds"
 }

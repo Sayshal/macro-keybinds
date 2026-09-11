@@ -1,8 +1,3 @@
-## New Features
-
-- The Keybind field in the macro config now uses the core form-field helpers, and the unsaved-macro notice renders as a standard warning notification instead of inline orange text.
-- Verified Foundry compatibility is bumped to 14.366.
-
 ## Bug Fixes
 
-- 3 bugs squashed
+- 1 bug squashed
