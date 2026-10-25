@@ -40,4 +40,4 @@ Install directly through Foundry's module manager or manually using this manifes
 
 ## Support
 
-If you encounter any issues or have feature requests, please file them on the [issue tracker](https://github.com/Sayshal/macro-keybinds/issues).
+Found a bug or want a feature? Report it at [3deathsaves.com/report](https://3deathsaves.com/report?module=macro-keybinds).
