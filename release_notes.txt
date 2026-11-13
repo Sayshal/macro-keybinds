@@ -1,7 +1,4 @@
-## Bug Fixes
-
-- Pending and saved keybind notifications now show localized text instead of the raw localization key.
-
 ## Changes
 
-- Confirmed working with D&D 5e 6.0.x
+- Bug reports and feature requests now go through 3deathsaves.com/report.
+- Confirmed working with D&D 5e 6.1.0.
