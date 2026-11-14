@@ -15,6 +15,8 @@
 **Macro Keybinds** enhances your Foundry VTT experience by providing powerful custom keybinding capabilities for your macros. Gone are the days of being limited to just the number
 keys - now you can bind any macro to any key combination you want!
 
+![Macro Keybinds Hero](https://wiki.3deathsaves.com/macro-keybinds/hero.png)
+
 ## Features
 
 - **Custom Keybindings**: Bind any macro to any key combination
@@ -23,7 +25,7 @@ keys - now you can bind any macro to any key combination you want!
 - **Hotbar Override**: Optionally disable the default number key bindings
 - **Client-Side Settings**: Each user can configure their own keybindings
 
-<img src="https://wiki.3deathsaves.com/macro-keybinds/keybind-field.png" alt="Keybind field in the macro window" width="600">
+<img src="https://wiki.3deathsaves.com/macro-keybinds/keybind-field.png" alt="Keybind field in the macro window" width="750">
 
 ## Installation
 
