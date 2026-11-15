@@ -1,4 +1,6 @@
-## Changes
+## Bug Fixes
 
-- Bug reports and feature requests now go through 3deathsaves.com/report.
-- Confirmed working with D&D 5e 6.1.0.
+- Assigning a key already used by another macro now unbinds that macro right away and keeps it unbound after reload, including when the new macro has not been saved yet.
+- Browser-protected keys (F5, F11, F12, PrintScreen, ScrollLock, NumLock, CapsLock) are rejected with Foundry's protected-key warning.
+- Control, Shift and Alt pressed with a key are now recorded, and keybind labels use Foundry's key names with modifiers in a fixed Control, Shift, Alt order (`Shift+;` rather than `Shift+:`).
+- Pressing Delete or Backspace in the keybind field now unbinds the macro right away, and a macro bound again later uses its new key after reload instead of a stale one.
