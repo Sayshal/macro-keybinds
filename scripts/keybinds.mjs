@@ -30,12 +30,21 @@ export async function updateStoredKeybinds(macroId, keybindData = null) {
     return;
   }
   const keybinds = getUserKeybinds();
-  if (keybindData) {
-    const modifiers = standardizeModifiers(keybindData.modifiers || []);
-    keybinds[macroId] = { key: keybindData.key, name: keybindData.name, modifiers, keybind: formatKeybind({ ...keybindData, modifiers }) };
-    if (game.keybindings.bindings.has(`${MODULE.ID}.execute.${macroId}`)) await game.keybindings.set(MODULE.ID, `execute.${macroId}`, [{ key: keybindData.key, modifiers }]);
-  } else delete keybinds[macroId];
+  if (!keybindData && !(macroId in keybinds)) return;
+  const modifiers = standardizeModifiers(keybindData?.modifiers || []);
+  if (keybindData) keybinds[macroId] = { key: keybindData.key, name: keybindData.name, modifiers, keybind: formatKeybind(keybindData) };
+  else delete keybinds[macroId];
   await setUserKeybinds(keybinds);
+  const actionName = `execute.${macroId}`;
+  const action = `${MODULE.ID}.${actionName}`;
+  if (game.keybindings.actions.has(action)) {
+    await game.keybindings.set(MODULE.ID, actionName, keybindData ? [{ key: keybindData.key, modifiers }] : []);
+    return;
+  }
+  const coreBindings = game.settings.get('core', 'keybindings');
+  if (!(action in coreBindings)) return;
+  delete coreBindings[action];
+  await game.settings.set('core', 'keybindings', coreBindings);
 }
 
 /** Register a Foundry keybinding action for every macro with a stored keybind. */
@@ -62,26 +71,16 @@ export function registerStoredKeybindings() {
 }
 
 /**
- * Render a keybind as a human-readable string like `Control+Shift+G`.
- * @param {object} keybind Keybind shape with `key`, optional `simKey`, optional `modifiers`.
+ * Render a keybind as a human-readable string like `Control+Shift+G`, with modifiers in a fixed order.
+ * @param {object} keybind Keybind shape with `key` and optional `modifiers`.
  * @returns {string} The formatted modifier+key string, or `''` when no key is set.
  */
 export function formatKeybind(keybind) {
   if (!keybind?.key) return '';
-  const displayKey = keybind.simKey || getDisplayKey(keybind.key);
-  const uniqueModifiers = [...new Set(keybind.modifiers || [])];
-  return [...uniqueModifiers, displayKey].join('+');
-}
-
-/**
- * Strip the `Key`/`Digit` prefix from a KeyboardEvent.code for display.
- * @param {string} keyCode Raw KeyboardEvent.code value.
- * @returns {string} Display-friendly key name.
- */
-function getDisplayKey(keyCode) {
-  if (keyCode.startsWith('Key')) return keyCode.substring(3);
-  if (keyCode.startsWith('Digit')) return keyCode.substring(5);
-  return keyCode;
+  const modifiers = standardizeModifiers(keybind.modifiers || []);
+  const { KeyboardManager } = foundry.helpers.interaction;
+  const orderedModifiers = Object.values(KeyboardManager.MODIFIER_KEYS).filter((name) => modifiers.includes(name));
+  return [...orderedModifiers, KeyboardManager.getKeycodeDisplayString(keybind.key)].join('+');
 }
 
 /**
@@ -91,16 +90,6 @@ function getDisplayKey(keyCode) {
  */
 export function isModifierCode(code) {
   return Object.values(foundry.helpers.interaction.KeyboardManager.MODIFIER_CODES).some((codes) => codes.includes(code));
-}
-
-/**
- * Resolve held KeyboardEvent.code values to the modifier names Foundry accepts.
- * @param {Set<string>} modifierSet Active modifier KeyboardEvent.code values.
- * @returns {string[]} Foundry modifier names.
- */
-export function getStandardizedModifiers(modifierSet) {
-  const { MODIFIER_CODES } = foundry.helpers.interaction.KeyboardManager;
-  return Object.keys(MODIFIER_CODES).filter((name) => MODIFIER_CODES[name].some((code) => modifierSet.has(code)));
 }
 
 /**

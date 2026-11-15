@@ -1,5 +1,5 @@
 import { MODULE } from './constants.mjs';
-import { formatKeybind, getStandardizedModifiers, getUserKeybinds, isModifierCode, setUserKeybinds, standardizeModifiers, updateStoredKeybinds } from './keybinds.mjs';
+import { formatKeybind, getUserKeybinds, isModifierCode, setUserKeybinds, standardizeModifiers, updateStoredKeybinds } from './keybinds.mjs';
 
 /** @type {Map<string, object>} Keybinds pressed on an unsaved macro, keyed by the config app's temporary id. */
 const pendingKeybinds = new Map();
@@ -31,35 +31,34 @@ function createKeybindGroup(value, isNewMacro) {
  * @param {string} [context.macroId] The saved macro id, absent until the macro is first saved.
  * @param {string} context.tempId The saved macro id, or a per-window id while the macro is unsaved.
  * @param {boolean} context.isNewMacro Whether the macro has yet to be saved.
- * @param {Set<string>} context.activeModifiers Modifier codes currently held down in the field.
  * @param {HTMLInputElement} context.input The keybind field.
  * @returns {Promise<void>}
  */
-async function onKeybindPressed(event, { macro, macroId, tempId, isNewMacro, activeModifiers, input }) {
+async function onKeybindPressed(event, { macro, macroId, tempId, isNewMacro, input }) {
   event.preventDefault();
-  if (isModifierCode(event.code)) {
-    activeModifiers.add(event.code);
-    return;
-  }
+  if (isModifierCode(event.code)) return;
   if (event.code === 'Delete' || event.code === 'Backspace') {
     if (isNewMacro) pendingKeybinds.delete(tempId);
     else await updateStoredKeybinds(macroId);
     input.value = '';
     return;
   }
-  const keybindData = { key: event.code, simKey: event.key.toUpperCase(), modifiers: getStandardizedModifiers(activeModifiers), name: macro.name };
+  const { KeyboardManager } = foundry.helpers.interaction;
+  if (KeyboardManager.PROTECTED_KEYS.includes(event.code)) {
+    ui.notifications.warn('KEYBINDINGS.ErrorProtectedKey', { format: { key: event.code } });
+    return;
+  }
+  const keybindData = { key: event.code, modifiers: KeyboardManager.getKeyboardEventContext(event).modifiers, name: macro.name };
   const keybindString = formatKeybind(keybindData);
   input.value = keybindString;
-  const keybinds = getUserKeybinds();
-  for (const [id, data] of Object.entries(keybinds)) {
-    if (data.keybind === keybindString && id !== macroId) {
-      ATLAS.log(3, `Duplicate keybind removed for macro ${id}`);
-      delete keybinds[id];
-    }
+  for (const [id, data] of Object.entries(getUserKeybinds())) {
+    if (id === macroId || formatKeybind(data) !== keybindString) continue;
+    ATLAS.log(3, `Duplicate keybind removed for macro ${id}`);
+    await updateStoredKeybinds(id);
   }
-  for (const [pendingId, pendingData] of pendingKeybinds.entries()) if (pendingData.keybind === keybindString && pendingId !== tempId) pendingKeybinds.delete(pendingId);
+  for (const [pendingId, pendingData] of pendingKeybinds.entries()) if (pendingId !== tempId && formatKeybind(pendingData) === keybindString) pendingKeybinds.delete(pendingId);
   if (isNewMacro) {
-    pendingKeybinds.set(tempId, { ...keybindData, keybind: keybindString, timestamp: Date.now() });
+    pendingKeybinds.set(tempId, { ...keybindData, timestamp: Date.now() });
     ui.notifications.info('MACROKEYBINDS.Config.PendingHint', { localize: true });
   } else {
     await updateStoredKeybinds(macroId, keybindData);
@@ -78,7 +77,7 @@ function injectKeybindField(app, html) {
   const macroId = macro?.id;
   const isNewMacro = !macroId;
   const tempId = isNewMacro ? `temp-${app.id}` : macroId;
-  const currentKeybind = (isNewMacro ? pendingKeybinds.get(tempId)?.keybind : getUserKeybinds()[macroId]?.keybind) || '';
+  const currentKeybind = formatKeybind(isNewMacro ? pendingKeybinds.get(tempId) : getUserKeybinds()[macroId]);
   const typeFormGroup = html.querySelector('select[name="type"]')?.closest('div.form-group');
   if (!typeFormGroup) {
     ATLAS.log(2, 'Could not find type form group');
@@ -87,11 +86,7 @@ function injectKeybindField(app, html) {
   const group = createKeybindGroup(currentKeybind, isNewMacro);
   typeFormGroup.after(group);
   const input = group.querySelector('input[name="macro-keybind"]');
-  const activeModifiers = new Set();
-  input.addEventListener('keydown', (event) => onKeybindPressed(event, { macro, macroId, tempId, isNewMacro, activeModifiers, input }));
-  input.addEventListener('keyup', (event) => {
-    if (isModifierCode(event.code)) activeModifiers.delete(event.code);
-  });
+  input.addEventListener('keydown', (event) => onKeybindPressed(event, { macro, macroId, tempId, isNewMacro, input }));
 }
 
 /**
@@ -115,7 +110,7 @@ async function claimPendingKeybind(macro) {
   if (!mostRecentPending) return;
   await updateStoredKeybinds(macro.id, { ...mostRecentPending, name: macro.name });
   pendingKeybinds.delete(mostRecentKey);
-  ui.notifications.info('MACROKEYBINDS.Notify.Applied', { format: { keybind: mostRecentPending.keybind, name: macro.name } });
+  ui.notifications.info('MACROKEYBINDS.Notify.Applied', { format: { keybind: formatKeybind(mostRecentPending), name: macro.name } });
 }
 
 /**
